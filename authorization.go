@@ -16,7 +16,7 @@ const salt = "the quick brown fox jumps over a lazy dog"
 func AuthAndResponse(w http.ResponseWriter, q *http.Request) (*jwt.StandardClaims, error) {
 	tokenString, err := GetTokenString(q)
 	if err != nil {
-		errorHandler(err.Error(), w, http.StatusBadRequest)
+		errorHandler(err.Error(), w, http.StatusUnauthorized)
 		return nil, err
 	}
 	claims, err := ParseToken(tokenString)
@@ -32,7 +32,7 @@ func HttpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString, err := GetTokenString(r)
 		if err != nil {
-			errorHandler(err.Error(), w, http.StatusBadRequest)
+			errorHandler(err.Error(), w, http.StatusUnauthorized)
 			return
 		}
 		_, err = ParseToken(tokenString)
@@ -51,6 +51,7 @@ func errorHandler(desc string, w http.ResponseWriter, status int) {
 }
 
 // Authentication middleware using github.com/gin-gonic/gin.
+// It also stores claims as key/value pair for this context. You can get it with c.Get("claims")
 func GinMiddleware(c *gin.Context) {
 	tokenString, err := GetTokenString(c.Request)
 	if err != nil {
